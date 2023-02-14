@@ -1,0 +1,33 @@
+#!/bin/bash
+
+PWD=`pwd`
+branchPath=$(git symbolic-ref -q HEAD) #Somthing like refs/heads/myBranchName
+branchName=${branchPath##*/}      #Get text behind the last / of the branch path
+
+commitName=`git config user.name`
+commitDate=$(date +'%b %d %Y %T')
+uniqueId=($(echo $commitName|cut -d' ' -f1)-$(date +'%b-%d-%Y-%T'))
+
+files=$(git diff-index --name-status --cached HEAD |grep -v ^D |awk '{print $2}'|grep '.java$')
+
+if [ $flag == "true" ]
+then
+	files=$(find ./ -iname '*.java')
+fi
+
+echo $files
+if [ "$files" != "" ]
+then
+	for filename in $files
+	do
+		grep -q 'Copyright Notice: © 2013-2022 Silent Eight Pte. Ltd.' $filename
+		if [ $? -ne 0 ]
+		then
+			sed -i "1i Copyright Notice: © 2013-2022 Silent Eight Pte. Ltd. or its affiliates. All rights reserved.
+This file is subject to the intellectual property rights of Silent Eight Pte. Ltd. or its affiliates. Any use, redistribution, or copying by any means, in whole or in part, with or without modification, is prohibited without the prior written consent of Silent Eight.
+Some portions contained in this file may be the copyrighted property of others or be subject to open-source licenses; acknowledgment of those copyrights is hereby given. All such material is used with the permission of the owner." $filename
+		fi
+		
+		git add $filename
+	done
+fi
